@@ -1,4 +1,4 @@
-﻿#ifndef MYVECTOR_HPP
+#ifndef MYVECTOR_HPP
 #define MYVECTOR_HPP
 
 #include <iostream>
