@@ -1,96 +1,94 @@
-﻿#ifndef DATABASE_HPP
+#ifndef DATABASE_HPP
 #define DATABASE_HPP
 
-#include <fstream>
-#include <iostream>
+#include <unordered_map>
 #include <string>
-#include "Table.hpp"
-#include "MyMap.hpp" // Самописный MyMap
-#include "MyVector.hpp" // Самописный MyVector
-#include "json.hpp" // Для работы с JSON (используйте nlohmann/json)
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
-using json = nlohmann::json; // Определение для использования JSON
+class Table {
+public:
+    std::unordered_map<std::string, std::string> data;
+
+    void insert(const std::string& key, const std::string& value) {
+        if (data.size() >= 1000) {
+            std::cerr << "Error: Table is full." << std::endl;
+            return;
+        }
+        data[key] = value;
+    }
+
+    void print() const {
+        for (const auto& pair : data) {
+            std::cout << pair.first << "\t" << pair.second << std::endl;
+        }
+    }
+
+    void saveToFile(const std::string& filename) const {
+        std::ofstream outFile(filename);
+        if (!outFile.is_open()) {
+            std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
+            return;
+        }
+        for (const auto& pair : data) {
+            outFile << pair.first << "," << pair.second << std::endl;
+        }
+    }
+
+    void loadFromFile(const std::string& filename) {
+        std::ifstream inFile(filename);
+        if (!inFile.is_open()) {
+            std::cerr << "Error: Could not open file " << filename << " for reading." << std::endl;
+            return;
+        }
+        std::string line;
+        while (std::getline(inFile, line)) {
+            std::istringstream ss(line);
+            std::string key, value;
+            std::getline(ss, key, ',');
+            std::getline(ss, value, ',');
+            data[key] = value;
+        }
+    }
+};
 
 class Database {
 public:
-    Database() {
-        loadSchema();  // Загружаем схему из файла schema.json при инициализации базы данных
-    }
+    std::unordered_map<std::string, Table> tables;
 
-    void createTable(const std::string& name, const MyVector<std::string>& columns) {
-        if (tables.find(name)) {
+    void createTable(const std::string& name) {
+        if (tables.find(name) != tables.end()) {
             std::cerr << "Error: Table already exists." << std::endl;
             return;
         }
-        tables.insert(name, Table(name, columns));
-        saveSchema();  // Сохраняем обновленную схему
+        tables[name] = Table();
     }
 
-    void insertInto(const std::string& tableName, const MyVector<std::string>& values) {
-        if (!tables.find(tableName)) {
+    void insertInto(const std::string& tableName, const std::string& key, const std::string& value) {
+        if (tables.find(tableName) == tables.end()) {
             std::cerr << "Error: Table does not exist." << std::endl;
             return;
         }
-        tables[tableName].insert(values);
-        tables[tableName].saveToFile();  // Сохраняем обновленные данные в CSV
+        tables[tableName].insert(key, value);
+        tables[tableName].saveToFile(tableName + ".csv");
     }
 
-    void deleteFrom(const std::string& tableName, const MyVector<std::string>& values) {
-        if (!tables.find(tableName)) {
+    void selectFrom(const std::string& tableName, const std::string& column1, const std::string& column2) {
+        if (tables.find(tableName) == tables.end()) {
             std::cerr << "Error: Table does not exist." << std::endl;
             return;
         }
-        tables[tableName].deleteRow(values);
-        tables[tableName].saveToFile();  // Обновляем CSV после удаления
-    }
 
-    void selectFrom(const std::string& tableName) {
-        if (!tables.find(tableName)) {
-            std::cerr << "Error: Table does not exist." << std::endl;
-            return;
+        std::cout << column1 << "\t" << column2 << std::endl;
+        for (const auto& pair : tables[tableName].data) {
+            std::cout << pair.first << "\t" << pair.second << std::endl;
         }
-        tables[tableName].print();  // Выводим содержимое таблицы
     }
-
-private:
-    MyMap<std::string, Table> tables;  // MyMap для хранения таблиц по именам
 
     void loadSchema() {
-        std::ifstream inFile("schema.json");  // Открываем файл schema.json
-        if (!inFile.is_open()) {
-            std::cerr << "Error: Could not open schema.json" << std::endl;
-            return;
-        }
-
-        json schema;
-        inFile >> schema;  // Читаем JSON из файла
-        for (const auto& item : schema["tables"].items()) {
-            std::string tableName = item.key();
-            MyVector<std::string> columns;
-            for (const auto& column : item.value()["columns"]) {
-                columns.push_back(column.get<std::string>());
-            }
-            tables.insert(tableName, Table(tableName, columns));  // Восстанавливаем таблицу
-            tables[tableName].loadFromFile();  // Загружаем данные из CSV
-        }
-    }
-
-    void saveSchema() {
-        json schema;
-        for (const auto& name : tables.keys()) {
-            json columnsJson;
-            for (const auto& column : tables[name].columns) {
-                columnsJson.push_back(column);
-            }
-            schema["tables"][name]["columns"] = columnsJson;  // Сохраняем колонки таблиц
-        }
-
-        std::ofstream outFile("schema.json");  // Записываем схему обратно в schema.json
-        if (outFile.is_open()) {
-            outFile << schema.dump(4);  // Форматируем JSON с отступами
-        }
-        else {
-            std::cerr << "Error: Could not save schema.json" << std::endl;
+        for (auto& pair : tables) {
+            pair.second.loadFromFile(pair.first + ".csv");
         }
     }
 };
