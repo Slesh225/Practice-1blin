@@ -1,4 +1,4 @@
-﻿#ifndef TABLE_HPP
+#ifndef TABLE_HPP
 #define TABLE_HPP
 
 #include "MyVector.hpp"
