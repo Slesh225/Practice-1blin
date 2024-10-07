@@ -1,4 +1,4 @@
-﻿#ifndef MYMAP_HPP
+#ifndef MYMAP_HPP
 #define MYMAP_HPP
 
 #include <iostream>
@@ -26,7 +26,7 @@ private:
 
 public:
     MyMap(size_t cap = 101) : capacity(cap) {
-        table = new Node * [capacity] { nullptr };
+        table = new Node * [capacity] { nullptr };  // Инициализируем массив указателей на nullptr
     }
 
     ~MyMap() {
@@ -86,8 +86,7 @@ public:
         }
 
         // Если ключ не найден, создаем новый элемент с значением по умолчанию
-        V defaultValue;
-        insert(key, defaultValue);
+        insert(key, V{});  // Используем конструктор по умолчанию явно
         return table[idx]->value;  // Возвращаем новое значение
     }
 
@@ -104,7 +103,7 @@ public:
         return result;
     }
 
-    // Итераторы для начала и конца
+    // Итераторы для начала и конца (упрощенная версия)
     Node** begin() {
         return table;
     }
