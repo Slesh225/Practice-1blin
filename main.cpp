@@ -1,11 +1,8 @@
-﻿#include <iostream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include "Database.hpp"
-#include "MyVector.hpp"
-#include "MyMap.hpp"
 
-// Парсер для обработки SQL-подобных команд
 class CommandParser {
 public:
     CommandParser(Database& db) : db(db) {}
@@ -25,12 +22,7 @@ public:
                     std::cerr << "Error: Missing table name." << std::endl;
                     return;
                 }
-                MyVector<std::string> columns;
-                std::string column;
-                while (iss >> column) {
-                    columns.push_back(column);
-                }
-                db.createTable(tableName, columns);
+                db.createTable(tableName);
             }
             else {
                 std::cerr << "Error: Missing 'TABLE' keyword." << std::endl;
@@ -46,49 +38,33 @@ public:
                     std::cerr << "Error: Missing table name." << std::endl;
                     return;
                 }
-                MyVector<std::string> values;
-                std::string value;
-                while (iss >> value) {
-                    values.push_back(value);
+                std::string values;
+                iss >> values;
+                if (values != "VALUES" && values != "values") {
+                    std::cerr << "Error: Missing 'VALUES' keyword." << std::endl;
+                    return;
                 }
-                db.insertInto(tableName, values);
+                std::string key, value;
+                iss >> key >> value;
+                db.insertInto(tableName, key, value);
             }
             else {
                 std::cerr << "Error: Missing 'INTO' keyword." << std::endl;
             }
         }
-        else if (keyword == "DELETE" || keyword == "delete") {
-            std::string from;
-            iss >> from;
-            if (from == "FROM" || from == "from") {
-                std::string tableName;
-                iss >> tableName;
-                if (tableName.empty()) {
-                    std::cerr << "Error: Missing table name." << std::endl;
-                    return;
-                }
-                MyVector<std::string> values;
-                std::string value;
-                while (iss >> value) {
-                    values.push_back(value);
-                }
-                db.deleteFrom(tableName, values);
-            }
-            else {
-                std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
-            }
-        }
         else if (keyword == "SELECT" || keyword == "select") {
+            std::string column1, column2;
+            iss >> column1 >> column2;
             std::string from;
             iss >> from;
             if (from == "FROM" || from == "from") {
-                std::string tableName;
-                iss >> tableName;
-                if (tableName.empty()) {
-                    std::cerr << "Error: Missing table name." << std::endl;
+                std::string tableName1, tableName2;
+                iss >> tableName1 >> tableName2;
+                if (tableName1.empty() || tableName2.empty()) {
+                    std::cerr << "Error: Missing table names." << std::endl;
                     return;
                 }
-                db.selectFrom(tableName);
+                db.selectFrom(tableName1, tableName2, column1, column2);
             }
             else {
                 std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
