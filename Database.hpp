@@ -51,6 +51,12 @@ public:
             data[key] = value;
         }
     }
+
+    void deleteRow(const std::string& key) {
+        if (data.erase(key) == 0) {
+            std::cerr << "Error: Key not found." << std::endl;
+        }
+    }
 };
 
 class Database {
@@ -84,6 +90,15 @@ public:
         for (const auto& pair : tables[tableName].data) {
             std::cout << pair.first << "\t" << pair.second << std::endl;
         }
+    }
+
+    void deleteFrom(const std::string& tableName, const std::string& key) {
+        if (tables.find(tableName) == tables.end()) {
+            std::cerr << "Error: Table does not exist." << std::endl;
+            return;
+        }
+        tables[tableName].deleteRow(key);
+        tables[tableName].saveToFile(tableName + ".csv");
     }
 
     void loadSchema() {
