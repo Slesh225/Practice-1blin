@@ -56,21 +56,45 @@ public:
             }
         }
         else if (keyword == "SELECT" || keyword == "select") {
-            std::string column1, column2;
-            iss >> column1 >> column2;
+            std::string column1, column2, from;
+            iss >> column1;
+            iss >> from;
+            if (from != "FROM" && from != "from") {
+                std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
+                return;
+            }
+            std::string tableName;
+            iss >> tableName;
+            db.selectFrom(tableName, column1, column2);
+        }
+        else if (keyword == "DELETE" || keyword == "delete") {
             std::string from;
             iss >> from;
-            if (from == "FROM" || from == "from") {
-                std::string tableName;
-                iss >> tableName;
-                if (tableName.empty()) {
-                    std::cerr << "Error: Missing table name." << std::endl;
-                    return;
-                }
-                db.selectFrom(tableName, column1, column2);
+            if (from != "FROM" && from != "from") {
+                std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
+                return;
+            }
+            std::string tableName;
+            iss >> tableName;
+            std::string where;
+            iss >> where;
+            if (where != "WHERE" && where != "where") {
+                std::cerr << "Error: Missing 'WHERE' keyword." << std::endl;
+                return;
+            }
+            std::string conditionColumn, conditionValue;
+            iss >> conditionColumn;
+            iss >> conditionValue;
+
+            // Extract table name and column for the condition
+            std::string columnName = conditionColumn.substr(conditionColumn.find('.') + 1);
+            std::string tableCondition = conditionColumn.substr(0, conditionColumn.find('.'));
+
+            if (tableName == tableCondition) {
+                db.deleteFrom(tableName, conditionValue);
             }
             else {
-                std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
+                std::cerr << "Error: Table names do not match." << std::endl;
             }
         }
         else {
