@@ -58,13 +58,13 @@ public:
             std::string from;
             iss >> from;
             if (from == "FROM" || from == "from") {
-                std::string tableName1, tableName2;
-                iss >> tableName1 >> tableName2;
-                if (tableName1.empty() || tableName2.empty()) {
-                    std::cerr << "Error: Missing table names." << std::endl;
+                std::string tableName;
+                iss >> tableName;
+                if (tableName.empty()) {
+                    std::cerr << "Error: Missing table name." << std::endl;
                     return;
                 }
-                db.selectFrom(tableName1, tableName2, column1, column2);
+                db.selectFrom(tableName, column1, column2);
             }
             else {
                 std::cerr << "Error: Missing 'FROM' keyword." << std::endl;
