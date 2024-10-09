@@ -26,9 +26,16 @@ public:
         rows.push_back(values);
     }
 
-    void deleteRow(const MyVector<std::string>& values) {
+    void deleteRow(const MyVector<std::string>& conditions) {
         for (size_t i = 0; i < rows.getSize(); ++i) {
-            if (rows[i] == values) {
+            bool match = true;
+            for (size_t j = 0; j < conditions.getSize(); ++j) {
+                if (rows[i][j] != conditions[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
                 for (size_t j = i; j < rows.getSize() - 1; ++j) {
                     rows[j] = rows[j + 1];
                 }
